@@ -211,7 +211,6 @@ getSchemaData(Archive *fout, int *numTablesPtr)
 	pg_log_info("reading table inheritance information");
 	inhinfo = getInherits(fout, &numInherits);
 
-	pg_log_info("reading event triggers");
 	getEventTriggers(fout, &numEventTriggers);
 
 	/* Identify extension configuration tables that should be dumped */
