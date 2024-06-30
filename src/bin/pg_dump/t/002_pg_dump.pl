@@ -2122,6 +2122,7 @@ my %tests = (
 		unlike => {
 			exclude_dump_test_schema => 1,
 			only_dump_measurement => 1,
+			no_event_triggers => 1
 		},
 	},
 

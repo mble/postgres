@@ -6187,6 +6187,15 @@ getFuncs(Archive *fout, int *numFuncs)
 	 * pg_catalog if they have an ACL different from what's shown in
 	 * pg_init_privs (so we have to join to pg_init_privs; annoying).
 	 */
+
+	/*
+	 * If we aren't dumping event triggers, don't dump functions that return
+	 * event triggers either.
+	 */
+	const char *not_event_trigger_check;
+
+	not_event_trigger_check = (fout->dopt->outputNoEventTriggers ? "\nAND p.prorettype <> 'pg_catalog.event_trigger'::regtype\n" : "\n");
+
 	if (fout->remoteVersion >= 90600)
 	{
 		const char *not_agg_check;
@@ -6207,6 +6216,7 @@ getFuncs(Archive *fout, int *numFuncs)
 						  "AND pip.classoid = 'pg_proc'::regclass "
 						  "AND pip.objsubid = 0) "
 						  "WHERE %s"
+						  "%s"
 						  "\n  AND NOT EXISTS (SELECT 1 FROM pg_depend "
 						  "WHERE classid = 'pg_proc'::regclass AND "
 						  "objid = p.oid AND deptype = 'i')"
@@ -6222,6 +6232,7 @@ getFuncs(Archive *fout, int *numFuncs)
 						  "\n  (p.oid = pg_transform.trffromsql"
 						  "\n  OR p.oid = pg_transform.trftosql))",
 						  not_agg_check,
+						  not_event_trigger_check,
 						  g_last_builtin_oid,
 						  g_last_builtin_oid);
 		if (dopt->binary_upgrade)
@@ -6245,6 +6256,7 @@ getFuncs(Archive *fout, int *numFuncs)
 						  "proowner "
 						  "FROM pg_proc p "
 						  "WHERE NOT proisagg"
+						  "%s"
 						  "\n  AND NOT EXISTS (SELECT 1 FROM pg_depend "
 						  "WHERE classid = 'pg_proc'::regclass AND "
 						  "objid = p.oid AND deptype = 'i')"
@@ -6255,6 +6267,7 @@ getFuncs(Archive *fout, int *numFuncs)
 						  "\n  OR EXISTS (SELECT 1 FROM pg_cast"
 						  "\n  WHERE pg_cast.oid > '%u'::oid"
 						  "\n  AND p.oid = pg_cast.castfunc)",
+						  not_event_trigger_check,
 						  g_last_builtin_oid);
 
 		if (fout->remoteVersion >= 90500)
