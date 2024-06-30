@@ -534,6 +534,13 @@ my %pgdump_runs = (
 			'-B', 'postgres',
 		],
 	},
+	no_event_triggers => {
+		dump_cmd => [
+			'pg_dump', '--no-sync',
+			"--file=$tempdir/no_event_triggers.sql",
+			'--no-event-triggers', 'postgres',
+		]
+	},
 	no_privs => {
 		dump_cmd => [
 			'pg_dump', '--no-sync',
@@ -720,6 +727,7 @@ my %full_runs = (
 	exclude_measurement_data => 1,
 	no_toast_compression => 1,
 	no_large_objects => 1,
+	no_event_triggers => 1,
 	no_owner => 1,
 	no_privs => 1,
 	no_table_access_method => 1,
@@ -2227,6 +2235,9 @@ my %tests = (
 			\n\s+\QEXECUTE FUNCTION dump_test.event_trigger_func();\E
 			/xm,
 		like => { %full_runs, section_post_data => 1, },
+		unlike => {
+			no_event_triggers => 1,
+		},
 	},
 
 	'CREATE TRIGGER test_trigger' => {
@@ -3832,6 +3843,7 @@ my %tests = (
 			no_privs => 1,
 			no_owner => 1,
 			no_table_access_method => 1,
+			no_event_triggers => 1,
 			only_dump_test_schema => 1,
 			pg_dumpall_dbprivs => 1,
 			pg_dumpall_exclude => 1,
@@ -3925,6 +3937,7 @@ my %tests = (
 			no_large_objects => 1,
 			no_privs => 1,
 			no_owner => 1,
+			no_event_triggers => 1,
 			no_table_access_method => 1,
 			pg_dumpall_dbprivs => 1,
 			pg_dumpall_exclude => 1,
