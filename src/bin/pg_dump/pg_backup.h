@@ -111,6 +111,7 @@ typedef struct _restoreOptions
 	int			no_publications;	/* Skip publication entries */
 	int			no_security_labels; /* Skip security label entries */
 	int			no_subscriptions;	/* Skip subscription entries */
+	int			no_event_triggers;	/* Skip event trigger entries */
 	int			strict_names;
 
 	const char *filename;
@@ -187,6 +188,7 @@ typedef struct _dumpOptions
 	int			use_setsessauth;
 	int			enable_row_security;
 	int			load_via_partition_root;
+	int			outputNoEventTriggers;
 
 	/* default, if no "inclusion" switches appear, is to dump everything */
 	bool		include_everything;
