@@ -111,6 +111,7 @@ typedef struct _restoreOptions
 	int			no_publications;	/* Skip publication entries */
 	int			no_security_labels; /* Skip security label entries */
 	int			no_subscriptions;	/* Skip subscription entries */
+	int			no_event_triggers;	/* Skip event trigger entries */
 	int			strict_names;
 
 	const char *filename;
