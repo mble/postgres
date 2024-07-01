@@ -254,6 +254,14 @@ my %pgdump_runs = (
 			'postgres',
 		],
 	},
+	no_event_triggers => {
+		dump_cmd => [
+			'pg_dump', '--no-sync',
+			"--file=$tempdir/no_event_triggers.sql",
+			'--no-event-triggers',
+			'postgres',
+		],
+	},
 	no_privs => {
 		dump_cmd => [
 			'pg_dump',                      '--no-sync',
@@ -420,6 +428,7 @@ my %full_runs = (
 	no_blobs                 => 1,
 	no_owner                 => 1,
 	no_privs                 => 1,
+	no_event_triggers		 => 1,
 	pg_dumpall_dbprivs       => 1,
 	pg_dumpall_exclude       => 1,
 	schema_only              => 1,);
@@ -1625,7 +1634,10 @@ my %tests = (
 			\$\$;/xm,
 		like =>
 		  { %full_runs, %dump_test_schema_runs, section_pre_data => 1, },
-		unlike => { exclude_dump_test_schema => 1, },
+		unlike => {
+			exclude_dump_test_schema => 1,
+			no_event_triggers        => 1,
+		},
 	},
 
 	'CREATE OPERATOR FAMILY dump_test.op_family' => {
@@ -1726,6 +1738,9 @@ my %tests = (
 			\n\s+\QEXECUTE FUNCTION dump_test.event_trigger_func();\E
 			/xm,
 		like => { %full_runs, section_post_data => 1, },
+		unlike => {
+			no_event_triggers => 1,
+		},
 	},
 
 	'CREATE TRIGGER test_trigger' => {
@@ -2938,6 +2953,7 @@ my %tests = (
 			no_blobs                => 1,
 			no_privs                => 1,
 			no_owner                => 1,
+			no_event_triggers   	=> 1,
 			only_dump_test_schema   => 1,
 			pg_dumpall_dbprivs      => 1,
 			pg_dumpall_exclude      => 1,
@@ -3011,6 +3027,7 @@ my %tests = (
 			no_blobs                 => 1,
 			no_privs                 => 1,
 			no_owner                 => 1,
+			no_event_triggers		 => 1,
 			pg_dumpall_dbprivs       => 1,
 			pg_dumpall_exclude       => 1,
 			role                     => 1,
