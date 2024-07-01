@@ -369,6 +369,7 @@ main(int argc, char **argv)
 		{"inserts", no_argument, NULL, 9},
 		{"lock-wait-timeout", required_argument, NULL, 2},
 		{"no-tablespaces", no_argument, &dopt.outputNoTablespaces, 1},
+		{"no-event-triggers", no_argument, &dopt.outputNoEventTriggers, 1},
 		{"quote-all-identifiers", no_argument, &quote_all_identifiers, 1},
 		{"load-via-partition-root", no_argument, &dopt.load_via_partition_root, 1},
 		{"role", required_argument, NULL, 3},
@@ -1041,6 +1042,7 @@ help(const char *progname)
 	printf(_("  --no-synchronized-snapshots  do not use synchronized snapshots in parallel jobs\n"));
 	printf(_("  --no-tablespaces             do not dump tablespace assignments\n"));
 	printf(_("  --no-unlogged-table-data     do not dump unlogged table data\n"));
+	printf(_("  --no-event-triggers     	 do not dump event triggers\n"));
 	printf(_("  --on-conflict-do-nothing     add ON CONFLICT DO NOTHING to INSERT commands\n"));
 	printf(_("  --quote-all-identifiers      quote all identifiers, even if not key words\n"));
 	printf(_("  --rows-per-insert=NROWS      number of rows per INSERT; implies --inserts\n"));
@@ -5971,6 +5973,11 @@ getFuncs(Archive *fout, int *numFuncs)
 	 * pg_catalog if they have an ACL different from what's shown in
 	 * pg_init_privs.
 	 */
+
+	const char *not_event_trigger_check;
+
+	not_event_trigger_check = (fout->dopt->outputNoEventTriggers ? "\nAND p.prorettype <> 'pg_catalog.event_trigger'::regtype\n" : "\n");
+
 	if (fout->remoteVersion >= 90600)
 	{
 		PQExpBuffer acl_subquery = createPQExpBuffer();
@@ -6001,6 +6008,7 @@ getFuncs(Archive *fout, int *numFuncs)
 						  "AND pip.classoid = 'pg_proc'::regclass "
 						  "AND pip.objsubid = 0) "
 						  "WHERE %s"
+						  "%s"
 						  "\n  AND NOT EXISTS (SELECT 1 FROM pg_depend "
 						  "WHERE classid = 'pg_proc'::regclass AND "
 						  "objid = p.oid AND deptype = 'i')"
@@ -6021,6 +6029,7 @@ getFuncs(Archive *fout, int *numFuncs)
 						  initracl_subquery->data,
 						  username_subquery,
 						  not_agg_check,
+						  not_event_trigger_check,
 						  g_last_builtin_oid,
 						  g_last_builtin_oid);
 		if (dopt->binary_upgrade)
@@ -6049,7 +6058,9 @@ getFuncs(Archive *fout, int *numFuncs)
 						  "pronamespace, "
 						  "(%s proowner) AS rolname "
 						  "FROM pg_proc p "
-						  "WHERE NOT proisagg",
+						  "WHERE NOT proisagg"
+						  "%s",
+						  not_event_trigger_check,
 						  username_subquery);
 		if (fout->remoteVersion >= 90200)
 			appendPQExpBufferStr(query,
@@ -8207,6 +8218,12 @@ getEventTriggers(Archive *fout, int *numEventTriggers)
 
 	/* Before 9.3, there are no event triggers */
 	if (fout->remoteVersion < 90300)
+	{
+		*numEventTriggers = 0;
+		return NULL;
+	}
+
+	if (fout->dopt->outputNoEventTriggers)
 	{
 		*numEventTriggers = 0;
 		return NULL;
