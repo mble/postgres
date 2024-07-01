@@ -8045,12 +8045,9 @@ getEventTriggers(Archive *fout, int *numEventTriggers)
 
 	if (fout->dopt->outputNoEventTriggers)
 	{
-		pg_log_info("excluded event triggers");
 		*numEventTriggers = 0;
 		return NULL;
 	}
-
-	pg_log_info("reading event triggers");
 
 	query = createPQExpBuffer();
 
